@@ -196,6 +196,17 @@ find_package(ZLIB)
 find_library(SNAPPY snappy)
 
 find_package(folly CONFIG REQUIRED)
+
+# folly's cmake config calls find_dependency(fmt), creating fmt::fmt in this
+# top-level scope. Mark it global now so rapids_cmake (pulled in by cudf/ucxx
+# inside velox) can reference it without hitting the CMake 3.21+ restriction
+# that IMPORTED_GLOBAL may only be set from the directory that created the target.
+foreach(_fmt_target fmt::fmt fmt::fmt-header-only)
+  if(TARGET ${_fmt_target})
+    set_target_properties(${_fmt_target} PROPERTIES IMPORTED_GLOBAL TRUE)
+  endif()
+endforeach()
+
 set(
   FOLLY_WITH_DEPENDENCIES
   ${FOLLY_LIBRARIES}
